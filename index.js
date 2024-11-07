@@ -39,40 +39,53 @@ app.get('/api/obtener_autos', async (req, res) => {
     }
 });
 
-
-// Endpoint para iniciar sesión
-app.post('/api/login', async (req, res) => {
+app.post("/api/login", async (req, res) => {
     const { email, password } = req.body;
-
+  
     try {
-        const connection = await mysql.createConnection(dbConfig);
-
-        const [rows] = await connection.execute('SELECT * FROM usuario WHERE email = ?', [email]);
-
-        if (rows.length === 0 || rows[0].password !== password) {
-            return res.status(401).json({ message: 'Credenciales inválidas' });
-        }
-
-        const user = rows[0];
-        const sessionId = Math.random().toString(36).substring(2);
-
-        await connection.execute('INSERT INTO sesiones (session_id, user_id) VALUES (?, ?)', [sessionId, user.id_usuario]);
-
-        res.cookie('session_id', sessionId, {
-            httpOnly: true,
-            secure: process.env.NODE_ENV === 'production',
-            sameSite: 'None',
-            maxAge: 3600000
+      const connection = await mysql.createConnection(dbConfig);
+  
+      const [rows] = await connection.execute(
+        "SELECT * FROM usuario WHERE email = ?",
+        [email]
+      );
+  
+      if (rows.length === 0 || rows[0].password !== password) {
+        return res.status(401).json({ message: "Credenciales inválidas" });
+      }
+  
+      const user = rows[0];
+      const sessionId = Math.random().toString(36).substring(2);
+  
+      await connection.execute(
+        "INSERT INTO sesiones (session_id, user_id) VALUES (?, ?)",
+        [sessionId, user.id_usuario]
+      );
+  
+      res.cookie("session_id", sessionId, {
+        httpOnly: true,
+        secure: process.env.NODE_ENV === "production",
+        sameSite: "None",
+        maxAge: 3600000,
+      });
+  
+      await connection.end();
+      return res
+        .status(200)
+        .json({
+          message: "Inicio de sesión exitoso",
+          user: user,
+          role: user.rol,
         });
-
-        await connection.end();
-        return res.status(200).json({ message: 'Inicio de sesión exitoso' });
     } catch (error) {
-        console.error("Error en el login:", error);
-        res.status(500).json({ message: 'Error interno del servidor', error: error.message });
+      console.error("Error en el login:", error);
+      res
+        .status(500)
+        .json({ message: "Error interno del servidor", error: error.message });
     }
-});
+  });
 
+  
 // Endpoint para verificar la sesión
 app.get('/api/check-session', async (req, res) => {
     const { session_id } = req.cookies;
