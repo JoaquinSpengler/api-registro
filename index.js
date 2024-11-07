@@ -27,6 +27,7 @@ const dbConfig = {
     database: process.env.DB_NAME,
 };
 
+
 app.get('/api/obtener_autos', async (req, res) => {
     try {
         const db = await getConnection();
