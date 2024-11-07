@@ -27,6 +27,18 @@ const dbConfig = {
     database: process.env.DB_NAME,
 };
 
+app.get('/api/obtener_autos', async (req, res) => {
+    try {
+        const db = await getConnection();
+        const [results] = await db.query('SELECT * FROM autos');
+        res.json(results);
+    } catch (err) {
+        console.error('Error al obtener autos:', err);
+        res.status(500).json({ error: 'Error al obtener autos' });
+    }
+});
+
+
 // Endpoint para iniciar sesión
 app.post('/api/login', async (req, res) => {
     const { email, password } = req.body;
