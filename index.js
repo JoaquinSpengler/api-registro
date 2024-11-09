@@ -23,6 +23,7 @@ app.use(cors(corsOptions));
 const dbConfig = {
     host: process.env.DB_HOST,
     user: process.env.DB_USER,
+    port: process.env.DB_PORT,
     password: process.env.DB_PASSWORD,
     database: process.env.DB_NAME,
 };
@@ -30,7 +31,7 @@ const dbConfig = {
 
 app.get('/api/obtener_autos', async (req, res) => {
     try {
-        const db = await getConnection();
+        const db = await mysql.createConnection(dbConfig);
         const [results] = await db.query('SELECT * FROM autos');
         res.json(results);
     } catch (err) {
@@ -85,7 +86,7 @@ app.post("/api/login", async (req, res) => {
     }
   });
 
-  
+
 // Endpoint para verificar la sesión
 app.get('/api/check-session', async (req, res) => {
     const { session_id } = req.cookies;
@@ -120,6 +121,24 @@ app.get('/api/check-session', async (req, res) => {
     }
 });
 
-app.listen(process.env.PORT || 5000, () => {
-    console.log("Servidor corriendo en el puerto", process.env.PORT || 5000);
+app.post("/api/registrar-conductor", async (req, res) => {
+    const {nombre, apellido, dni,habilitado,password,email,rol} = req.body;
+  
+    try {
+      const db = await mysql.createConnection(dbConfig);
+      await db.execute(
+        "INSERT INTO usuario (nombre, apellido, dni,habilitado,password,email,rol) VALUES (?, ?, ?, ?, ?, ?, ?)",
+        [nombre, apellido, dni,habilitado,password,email,rol]
+      );
+      res.json({ message: "Usuario registrado correctamente" });
+         } catch (err) {
+      console.error("Error al registrar usuario:", err);
+      res.status(500).json({ error: "Error al registrar usuario" });
+    }
+  });
+
+app.listen(process.env.PORT, () => {
+    console.log("Servidor corriendo en el puerto", process.env.PORT);
 });
+
+
