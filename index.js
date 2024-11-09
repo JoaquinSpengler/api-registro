@@ -77,6 +77,7 @@ app.post("/api/login", async (req, res) => {
           message: "Inicio de sesión exitoso",
           user: user,
           role: user.rol,
+          sessionId: sessionId,
         });
     } catch (error) {
       console.error("Error en el login:", error);
@@ -137,6 +138,35 @@ app.post("/api/registrar-conductor", async (req, res) => {
     }
   });
 
+  app.post("/api/logout", async (req, res) => {
+    const { sessionId } = req.body; // Recibir el sessionId del frontend
+  
+    if (!sessionId) {
+      return res.status(400).json({ error: "Session ID no proporcionado" }); // Validar que se haya enviado un sessionId
+    }
+  
+    try {
+      const connection = await mysql.createConnection(dbConfig);
+  
+      const expiredAt = new Date(); // Fecha y hora actuales para marcar la sesión como caducada
+  
+      // Actualizar la sesión en la base de datos, poniendo una fecha de expiración
+      await connection.execute(
+        "UPDATE sesiones SET expires_at = ? WHERE session_id = ?",
+        [expiredAt, sessionId]
+      );
+  
+      await connection.end();
+  
+      // Responder con éxito
+      return res.json({ message: "Sesión cerrada correctamente" });
+    } catch (error) {
+      console.error("Error al cerrar sesión:", error);
+      return res.status(500).json({ error: "Error al cerrar sesión" });
+    }
+  });
+  
+  
 app.listen(process.env.PORT, () => {
     console.log("Servidor corriendo en el puerto", process.env.PORT);
 });
