@@ -56,19 +56,6 @@ app.post("/api/login", async (req, res) => {
       }
   
       const user = rows[0];
-      const sessionId = Math.random().toString(36).substring(2);
-  
-      await connection.execute(
-        "INSERT INTO sesiones (session_id, user_id) VALUES (?, ?)",
-        [sessionId, user.id_usuario]
-      );
-  
-      res.cookie("session_id", sessionId, {
-        httpOnly: true,
-        secure: process.env.NODE_ENV === "production",
-        sameSite: "None",
-        maxAge: 3600000,
-      });
   
       await connection.end();
       return res
@@ -77,7 +64,6 @@ app.post("/api/login", async (req, res) => {
           message: "Inicio de sesión exitoso",
           user: user,
           role: user.rol,
-          sessionId: sessionId,
         });
     } catch (error) {
       console.error("Error en el login:", error);
